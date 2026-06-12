@@ -45,3 +45,5 @@ HEADERS = [
     HEADER_AZIMUTH_DEG,
     HEADER_DISTANCE_KM,
     TLE_AGE_HOURS]
+
+BAR_FORMAT = "{l_bar}{bar}| {n_fmt}/{total_fmt}  {elapsed}<{remaining}  {postfix}"
