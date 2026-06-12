@@ -236,8 +236,8 @@ def sample_orbits_for_all_passes(
         return all_orbits
 
     all_orbits = []
-    executor_cls = ThreadPoolExecutor if os.name == "nt" else ProcessPoolExecutor
-    logger.info("Parallel executor: %s", executor_cls.__name__)
+    executor_cls = ThreadPoolExecutor
+    # logger.info("Parallel executor: %s", executor_cls.__name__)
 
     with executor_cls(max_workers=execution_config.workers) as executor:
         future_to_pass = {
