@@ -9,7 +9,15 @@ import numpy as np
 
 from sat_sim.config import OutputConfig, TimeConfig
 from sat_sim.models import OneSatelliteOrbit
-
+# TODO: add more plot types, e.g. sky tracks, Doppler vs elevation, etc.
+# TODO: consider adding a CLI command for plotting, e.g. `sat-sim plot --type doppler-curves ...`
+# TODO: make a dashboard to run the simulation and show plots in real time, e.g. using Streamlit or a Jupyter notebook.
+# TODO: add standard plt style options, maybe in a file?
+# plt.rcParams["figure.figsize"] = [8, 5]  # bigger default figure size
+# plt.rcParams["font.family"] = "serif"
+# plt.rcParams["font.serif"] = ["Times New Roman"] + plt.rcParams["font.serif"]
+# plt.rcParams["font.size"] = 17
+# plt.rcParams["pdf.fonttype"] = 42  # Ensures editable text in Illustrator
 
 logger = logging.getLogger("sat_sim")
 

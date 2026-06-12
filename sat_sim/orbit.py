@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import logging
 from datetime import timedelta
 
@@ -11,7 +12,7 @@ from sat_sim.models import OrbitSample, SatellitePass, OneSatelliteOrbit
 from sat_sim.station import GroundStation
 from skyfield.units import Velocity, Angle, AngleRate, Distance
 from typing import Any
-from concurrent.futures import ProcessPoolExecutor, as_completed
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
 
 C_KM_PER_S = speed_of_light / 1000.0
 
@@ -235,7 +236,10 @@ def sample_orbits_for_all_passes(
         return all_orbits
 
     all_orbits = []
-    with ProcessPoolExecutor(max_workers=execution_config.workers) as executor:
+    executor_cls = ThreadPoolExecutor if os.name == "nt" else ProcessPoolExecutor
+    logger.info("Parallel executor: %s", executor_cls.__name__)
+
+    with executor_cls(max_workers=execution_config.workers) as executor:
         future_to_pass = {
             executor.submit(
                 sample_orbit_worker,
