@@ -120,14 +120,14 @@ def main():
         logger=logger,
     )
 
-    logger.info("First few orbit samples:")
+    logger.debug("First few orbit samples:")
     for sample in orbits[:5]:
-        logger.info(
+        logger.debug(
             f"satellite={sample.satellite_pass.satellite_name} | "
             f"pass={sample.satellite_pass.pass_idx} | "
         )
         for orbit_sample in sample.orbit_samples[:5]:
-            logger.info(
+            logger.debug(
                 f"  t={orbit_sample.timestamp.utc_iso()} | "
                 f"  el={orbit_sample.elevation_deg:.2f} deg | "
                 f"  az={orbit_sample.azimuth_deg:.2f} deg | "

@@ -13,6 +13,10 @@ from sat_sim.station import GroundStation
 from skyfield.units import Velocity, Angle, AngleRate, Distance
 from typing import Any
 from concurrent.futures import ThreadPoolExecutor, as_completed, ProcessPoolExecutor
+from tqdm import tqdm
+
+from sat_sim.constants import BAR_FORMAT
+
 
 C_KM_PER_S = speed_of_light / 1000.0
 
@@ -212,22 +216,40 @@ def sample_orbits_for_all_passes(
     
     if not execution_config.parallel:
         all_orbits: list[OneSatelliteOrbit] = []
+        with tqdm(
+            total=len(satellite_passes),
+            desc="Sampling passes",
+            unit="pass",
+            bar_format=BAR_FORMAT,
+            dynamic_ncols=True,
+            leave=True,) as pbar:
+            for sat_pass in satellite_passes:
+                try:
+                    samples_for_pass = sample_orbit_for_one_pass(
+                        satellite_pass=sat_pass,
+                        station=station,
+                        rf_config=rf_config,
+                        execution_config=execution_config,
+                        time_config=time_config,
+                        logger=None, # to ensure that logger doesnt keep printing for every sample in the pass, but only one log line per pass?
+                    )
 
-        for sat_pass in satellite_passes:
-            samples_for_pass = sample_orbit_for_one_pass(
-                satellite_pass=sat_pass,
-                station=station,
-                rf_config=rf_config,
-                execution_config=execution_config,
-                time_config=time_config,
-                logger=logger
-            )
-            all_orbits.append(samples_for_pass)
+                    all_orbits.append(samples_for_pass)
 
+                    msg = (
+                        f"{sat_pass.satellite_name} p{sat_pass.pass_idx}: "
+                        f"{len(samples_for_pass.orbit_samples)} samples"
+                    )
+
+                except Exception as e:
+                    msg = f"{sat_pass.satellite_name} p{sat_pass.pass_idx}: ERROR - {e}"
+                    logger.error(msg)
+
+                pbar.set_postfix_str(msg, refresh=True)
+                pbar.update(1)
         total_samples = sum(
         len(one_orbit.orbit_samples)
-        for one_orbit in all_orbits
-    )
+        for one_orbit in all_orbits)
 
         logger.info(
             f"Sampled orbits for {len(satellite_passes)} satellite passes, "
@@ -252,18 +274,33 @@ def sample_orbits_for_all_passes(
             for sat_pass in satellite_passes
         }
 
-        for future in as_completed(future_to_pass):
-            sat_pass = future_to_pass[future]
-            try:
-                one_orbit = future.result()
-                all_orbits.append(one_orbit)
-            except Exception as exc:
-                logger.error(
-                    f"Error sampling orbit for satellite {sat_pass.satellite_name} "
-                    f"pass {sat_pass.pass_idx}: {exc}"
-                )
-                continue
-        # Keep deterministic order after parallel execution.
+        with tqdm(
+            total=len(future_to_pass),
+            desc="Sampling passes",
+            unit="pass",
+            bar_format=BAR_FORMAT,
+            dynamic_ncols=True,
+            leave=True,
+        ) as pbar:
+            for future in as_completed( future_to_pass):
+                sat_pass = future_to_pass[future]
+
+                try:
+                    one_orbit = future.result()
+                    all_orbits.append(one_orbit)
+
+                    msg = (
+                        f"{sat_pass.satellite_name} p{sat_pass.pass_idx}: "
+                        f"{len(one_orbit.orbit_samples)} samples"
+                    )
+
+                except Exception as e:
+                    msg = f"{sat_pass.satellite_name} p{sat_pass.pass_idx}: ERROR - {e}"
+                    logger.error(msg)
+
+                pbar.set_postfix_str(msg, refresh=True)
+                pbar.update(1)
+            # Keep deterministic order after parallel execution.
     all_orbits.sort(
         key=lambda orbit: (
             orbit.satellite_pass.satellite_name,
