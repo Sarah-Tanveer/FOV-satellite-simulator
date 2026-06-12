@@ -12,7 +12,7 @@ from sat_sim.models import OrbitSample, SatellitePass, OneSatelliteOrbit
 from sat_sim.station import GroundStation
 from skyfield.units import Velocity, Angle, AngleRate, Distance
 from typing import Any
-from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
+from concurrent.futures import ThreadPoolExecutor, as_completed
 
 C_KM_PER_S = speed_of_light / 1000.0
 
